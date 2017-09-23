@@ -15,7 +15,8 @@
 
 void *umalloc(size_t size)
 {
-    char *p = NULL, *p_chunk = NULL;
+    char *p = NULL;
+    char *p_chunk = NULL;
 
     if (!size)
     {
