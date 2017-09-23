@@ -19,24 +19,25 @@ Besides the allocated memory are initialized to `0`, when free the memory, it wi
 
 ## Example:  
 
-	#include <stdint.h>
-	#include <inttypes.h>
-	#include <stdio.h>
-	#include <string.h>
-	#include <umalloc.h>
+    #include <stdint.h>
+    #include <inttypes.h>
+    #include <stdio.h>
+    #include <string.h>
+    #include <umalloc.h>
 
-	int main(void)
-	{
-    	uint32_t size = 1;
-    	for (size = 1; size < UINT32_MAX; size++)
-    	{
-			printf("size=%" PRIu32 "\n", size);
-        	char *p = umalloc(size);
-			memset(p, 0xFF, size);
-        	ufree(p);
-    	}
-    	return 0;
-	}
+    int main(void)
+    {
+        uint32_t size = 1;
+        for (size = 1; size < UINT32_MAX; size++)
+        {
+            printf("size=%" PRIu32 "\n", size);
+            char *p = umalloc(size);
+            memset(p, 0xFF, size);
+            ufree(p);
+        }
+        return 0;
+    }
+
 
 Build and run it:  
 
