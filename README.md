@@ -8,9 +8,8 @@ A tiny Unix dynamic memory allocator library. The allocated memory is divided in
      ------------------------------------------------- 
 Besides the allocated memory are initialized to `0`, when free the memory, it will check following cases:  
 
-(1) Free `NULL` pointer;  
-(2) Both up and down out-of-bound memory error;  
-(3) Double-free pointer error.  
+(1) Both up and down out-of-bound memory error;  
+(2) Double-free pointer error.  
 
 ## Usage 
 	$ git clone https://github.com/NanXiao/umalloc.git
@@ -27,8 +26,8 @@ Besides the allocated memory are initialized to `0`, when free the memory, it wi
 
     int main(void)
     {
-        uint32_t size = 1;
-        for (size = 1; size < UINT32_MAX; size++)
+        uint32_t size = 0;
+        for (size = 0; size < UINT32_MAX; size++)
         {
             printf("size=%" PRIu32 "\n", size);
             char *p = umalloc(size);

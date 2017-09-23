@@ -50,8 +50,10 @@ void ufree(void *ptr)
     char *p_head_guard = NULL;
     char *p_tail_guard = NULL;
 
-    /* Check free NULL pointer */
-    assert(ptr);
+    if (!ptr)
+    {
+        return;
+    }
 
     p_chunk_size = ((char*)ptr) - HEAD_OVERHEAD_LEN;
 
