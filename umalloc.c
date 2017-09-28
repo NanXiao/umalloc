@@ -1,7 +1,9 @@
+#include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include "umalloc.h"
 
 /* Warning: the guard string must be 8-byte length*/
 #define HEAD_GUARD  "DEADBEEF"
@@ -12,6 +14,34 @@
 #define TOTAL_OVERHEAD_LEN  (HEAD_OVERHEAD_LEN + TAIL_OVERHEAD_LEN)
 
 #define MAX_CHUNK_SIZE_LEN  (SIZE_MAX - TOTAL_OVERHEAD_LEN)
+
+static void get_chunk_attrs(
+                void *ptr,
+                size_t **pp_chunk_size,
+                char **pp_head_guard,
+                char **pp_tail_guard);
+
+static void get_chunk_attrs(
+                void *ptr,
+                size_t **pp_chunk_size,
+                char **pp_head_guard,
+                char **pp_tail_guard)
+{
+    size_t chunk_size = 0;
+
+    *pp_chunk_size = (size_t*)(((char*)ptr) - HEAD_OVERHEAD_LEN);
+    chunk_size = **pp_chunk_size;
+    *pp_head_guard = (char*)((*pp_chunk_size) + 1);
+    *pp_tail_guard = ((char*)ptr) + chunk_size;
+
+    /* Check up out-of-bound memory error */
+    assert(!memcmp(*pp_head_guard, HEAD_GUARD, 8));
+
+    /* Check down out-of-bound memory error */
+    assert(!memcmp(*pp_tail_guard, TAIL_GUARD, 8));
+
+    return;
+}
 
 void *umalloc(size_t size)
 {
@@ -43,10 +73,54 @@ void *umalloc(size_t size)
     return p_chunk;
 }
 
-void ufree(void *ptr)
+void *urealloc(void *ptr, size_t size)
 {
     size_t chunk_size = 0;
-    char *p_chunk_size = NULL;
+    size_t *p_chunk_size = NULL;
+    char *p_head_guard = NULL;
+    char *p_tail_guard = NULL;
+
+    if (!ptr)
+    {
+        return umalloc(size);
+    }
+
+    if (!size)
+    {
+        ufree(ptr);
+        return NULL;
+    }
+
+    get_chunk_attrs(ptr, &p_chunk_size, &p_head_guard, &p_tail_guard);
+
+    chunk_size = *p_chunk_size;
+    if (size <= chunk_size)
+    {
+        *p_chunk_size = size;
+        p_tail_guard = p_tail_guard - (chunk_size - size);
+        memcpy(p_tail_guard, TAIL_GUARD, 8);
+    }
+    else
+    {
+        char *p = umalloc(size);
+        if (p)
+        {
+            memcpy(p, ptr, chunk_size);
+            ufree(ptr);
+            ptr = p;
+        }
+        else
+        {
+            errno = ENOMEM;
+            ptr = NULL;
+        }
+    }
+    return ptr;
+}
+
+void ufree(void *ptr)
+{
+    size_t *p_chunk_size = NULL;
     char *p_head_guard = NULL;
     char *p_tail_guard = NULL;
 
@@ -55,17 +129,7 @@ void ufree(void *ptr)
         return;
     }
 
-    p_chunk_size = ((char*)ptr) - HEAD_OVERHEAD_LEN;
-
-    chunk_size = *((size_t*)p_chunk_size);
-    p_head_guard = p_chunk_size + sizeof(size_t);
-    p_tail_guard = ptr + chunk_size;
-
-    /* Check up out-of-bound memory error */
-    assert(!memcmp(p_head_guard, HEAD_GUARD, 8));
-
-    /* Check down out-of-bound memory error */
-    assert(!memcmp(p_tail_guard, TAIL_GUARD, 8));
+    get_chunk_attrs(ptr, &p_chunk_size, &p_head_guard, &p_tail_guard);
 
     /* Reset chunk_size & *guard values to 0. If 
        double-free pointer, it will triger above assert.*/

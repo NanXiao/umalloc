@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 void *umalloc(size_t size);
+void *urealloc(void *ptr, size_t size);
 void ufree(void *ptr);
 
 #ifdef __cplusplus
