@@ -26,12 +26,14 @@ Besides the allocated memory are initialized to `0`, when free the memory, it wi
 
     int main(void)
     {
-        uint32_t size = 0;
-        for (size = 0; size < UINT32_MAX; size++)
+        uint32_t size = 1;
+        for (size = 1; size < UINT32_MAX; size++)
         {
             printf("size=%" PRIu32 "\n", size);
             char *p = umalloc(size);
             memset(p, 0xFF, size);
+            p = urealloc(p, size - 1);
+            p = urealloc(p, size);
             ufree(p);
         }
         return 0;
