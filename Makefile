@@ -3,8 +3,8 @@ all:
 	cc -shared -o libumalloc.so umalloc.o
 
 install:
-	cp libumalloc.so /usr/local/lib
-	cp umalloc.h /usr/local/include
+	install libumalloc.so /usr/local/lib
+	install umalloc.h /usr/local/include
 
 uninstall:
 	rm /usr/local/include/umalloc.h /usr/local/lib/libumalloc.so
